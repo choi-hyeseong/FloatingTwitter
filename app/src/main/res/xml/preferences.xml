@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory android:title="@string/oauth">
+        <Preference
+            android:key="oauth_field"
+            android:title="@string/setting_oauth"
+            android:summary="@string/oauth_not_set"
+            app:fragment="com.comet.floatingtwitter.OAuthViewFragment"
+            />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/setting">
+
+        <SwitchPreference
+            android:key="image_enabled"
+            android:title="@string/custom_image"
+            android:summary="@string/custom_image_summary" />
+        <Preference
+            android:title="@string/custom_image_setting"
+            android:summary="@string/custom_image_pick"
+            android:enabled="false" />
+        <SeekBarPreference
+            android:key="icon_size"
+            android:title="@string/icon_size"
+            android:defaultValue="64"
+            android:max="150"
+            />
+        <EditTextPreference
+            android:key="mention_color"
+            android:summary="@string/mention_color_summary"
+            android:title="@string/mention_color"/>
+        <EditTextPreference
+            android:key="dm_color"
+            android:summary="@string/dm_color_summary"
+            android:title="@string/dm_color"/>
+        <EditTextPreference
+            android:key="twin_color"
+            android:summary="@string/twin_color_summary"
+            android:title="@string/twin_color"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

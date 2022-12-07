@@ -4,9 +4,7 @@ import android.content.SharedPreferences
 import android.content.SharedPreferences.Editor
 
 
-class PreferenceUtil private constructor(manager: SharedPreferences) {
-
-    private lateinit var manager : SharedPreferences
+class PreferenceUtil private constructor(private val manager: SharedPreferences) {
 
     companion object {
         //singleton

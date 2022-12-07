@@ -6,11 +6,15 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
 import com.comet.floatingtwitter.callback.ActivityCallback
 import com.comet.floatingtwitter.service.FloatingService
+import com.comet.floatingtwitter.util.PreferenceUtil
 
 class MainActivity : AppCompatActivity(), ActivityCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
+        PreferenceUtil.init(getSharedPreferences("Floating", MODE_PRIVATE))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         checkPermission()
@@ -34,9 +38,10 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
         else
             supportFragmentManager.beginTransaction().add(R.id.frame, MainFragment()).commit()
     }
-    //enum이나 만들어서 스위칭 하기로.
+
+
     override fun switchSetting() {
-        supportFragmentManager.beginTransaction().addToBackStack(null).replace(R.id.frame, OAuthViewFragment()).commit();
+        supportFragmentManager.beginTransaction().addToBackStack(null).replace(R.id.frame, SettingFragment()).commit();
     }
 
     override fun startService() {
