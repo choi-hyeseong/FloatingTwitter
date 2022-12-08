@@ -81,7 +81,7 @@ class OAuthViewFragment : Fragment() {
             credentials.twitterOauth2ClientId,
             credentials.twitterOAuth2ClientSecret,
             "http://twitter.com",
-            "offline.access tweet.read users.read"
+            "offline.access tweet.read users.read dm.read"
         )
         var token: OAuth2AccessToken? = null
         val secretState = "state"

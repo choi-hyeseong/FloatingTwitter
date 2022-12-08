@@ -25,4 +25,20 @@ class PreferenceUtil private constructor(private val manager: SharedPreferences)
         }
     }
 
+    fun getBoolean(key: String) : Boolean {
+        return manager.getBoolean(key, false);
+    }
+
+    fun putBoolean(key: String, boolean: Boolean) {
+        manager.edit().putBoolean(key, boolean).apply();
+    }
+
+    fun getInt(key: String) : Int {
+        return manager.getInt(key, -1);
+    }
+
+    fun putInt(key: String, value: Int) {
+        manager.edit().putInt(key, value).apply();
+    }
+
 }

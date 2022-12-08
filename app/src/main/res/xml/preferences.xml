@@ -10,15 +10,6 @@
             />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/setting">
-
-        <SwitchPreference
-            android:key="image_enabled"
-            android:title="@string/custom_image"
-            android:summary="@string/custom_image_summary" />
-        <Preference
-            android:title="@string/custom_image_setting"
-            android:summary="@string/custom_image_pick"
-            android:enabled="false" />
         <SeekBarPreference
             android:key="icon_size"
             android:title="@string/icon_size"

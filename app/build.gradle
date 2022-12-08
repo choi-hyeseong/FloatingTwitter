@@ -10,6 +10,12 @@ android {
     namespace 'com.comet.floatingtwitter'
     compileSdk 32
 
+
+    applicationVariants.all {
+        variant -> variant.getRuntimeConfiguration().exclude group: 'com.google.code.findbugs', module: 'jsr305'
+            variant.getRuntimeConfiguration().exclude group: 'com.google.code.findbugs', module: 'annotations'
+    }
+
     defaultConfig {
         applicationId "com.comet.floatingtwitter"
         minSdk 23
@@ -52,7 +58,12 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.0'
     implementation ("com.twitter:twitter-api-java-sdk:2.0.2") {
         exclude group:'org.apache.oltu.oauth2' , module: 'org.apache.oltu.oauth2.common'
-        exclude group:'javax.ws.rs'
         exclude group:'com.google.guava'
+    }
+}
+
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        substitute module('javax.ws.rs:jsr311-api') with module('javax.ws.rs:javax.ws.rs-api:2.0.1')
     }
 }
