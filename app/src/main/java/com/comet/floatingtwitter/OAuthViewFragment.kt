@@ -2,9 +2,6 @@ package com.comet.floatingtwitter
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +10,6 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.comet.floatingtwitter.util.PreferenceUtil
-import com.github.scribejava.core.model.OAuth2AccessToken
 import com.github.scribejava.core.pkce.PKCE
 import com.github.scribejava.core.pkce.PKCECodeChallengeMethod
 import com.twitter.clientlib.TwitterCredentialsOAuth2
@@ -23,10 +19,10 @@ import kotlinx.coroutines.runBlocking
 
 class OAuthViewFragment : Fragment() {
 
-    private val preference: PreferenceUtil? = PreferenceUtil.INSTANCE
+    private val preference: PreferenceUtil = PreferenceUtil.INSTANCE
     private lateinit var service: TwitterOAuth20Service
     private lateinit var pkce: PKCE
-    private var isRequested = false;
+    private var isRequested = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
@@ -34,8 +30,8 @@ class OAuthViewFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.oauth_layout, container, false);
-        val webView = view.findViewById<WebView>(R.id.webview);
+        val view = inflater.inflate(R.layout.oauth_layout, container, false)
+        val webView = view.findViewById<WebView>(R.id.webview)
         webView.settings.javaScriptEnabled = true
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -46,11 +42,11 @@ class OAuthViewFragment : Fragment() {
                             //wait
                             Thread {
                                 if (!isRequested) {
-                                    isRequested = true;
+                                    isRequested = true
                                     val code = url.split("code=")[1]
                                     val accessToken = service.getAccessToken(pkce, code)
-                                    preference?.putString("token", accessToken.accessToken)
-                                    preference?.putString("refresh", accessToken.refreshToken)
+                                    preference.putString("token", accessToken.accessToken)
+                                    preference.putString("refresh", accessToken.refreshToken)
                                     requireActivity().runOnUiThread{
                                         Toast.makeText(
                                             context,
@@ -67,7 +63,7 @@ class OAuthViewFragment : Fragment() {
             }
         }
         executeOAuth(webView)
-        return view;
+        return view
     }
 
     private fun executeOAuth(webView: WebView) {
@@ -83,7 +79,6 @@ class OAuthViewFragment : Fragment() {
             "http://twitter.com",
             "offline.access tweet.read users.read dm.read"
         )
-        var token: OAuth2AccessToken? = null
         val secretState = "state"
         pkce = PKCE()
         pkce.codeChallenge = "challenge"

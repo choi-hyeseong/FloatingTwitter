@@ -8,9 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.PreferenceScreen
 import com.comet.floatingtwitter.callback.ActivityCallback
 import com.comet.floatingtwitter.service.FloatingService
 import com.comet.floatingtwitter.util.PreferenceUtil
@@ -46,7 +43,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback{
 
     override fun switchSetting() {
         supportFragmentManager.beginTransaction().addToBackStack(null)
-            .replace(R.id.frame, SettingFragment()).commit();
+            .replace(R.id.frame, SettingFragment()).commit()
     }
 
     override fun startService(setting : com.comet.floatingtwitter.model.Settings) {
