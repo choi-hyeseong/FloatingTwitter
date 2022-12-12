@@ -171,7 +171,7 @@ class FloatingService : FloatingBubbleService(), Runnable {
     }
 
     override fun run() {
-        while (Thread.interrupted()) {
+        while (!Thread.interrupted()) {
             try {
                 var mention = false
                 var dm = false
