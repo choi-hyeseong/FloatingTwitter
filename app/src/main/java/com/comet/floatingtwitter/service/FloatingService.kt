@@ -98,7 +98,7 @@ class FloatingService : FloatingBubbleService(), Runnable {
                         BuildConfig.CLIENT_SECRET,
                         setting.token,
                         setting.refresh
-                    )
+                    ).apply { isOAUth2AutoRefreshToken = true }
                 )
                 try {
                     val set = HashSet<String>()
