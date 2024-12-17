@@ -27,9 +27,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback{
         runBlocking {
            Log.w("ASDF", "${repo.loadSetting()}")
 
-            repo.saveSetting(SettingData(10,5,5,5))
 
-            Log.w("ASDF", "${repo.loadSetting()}")
 
         }
         /**

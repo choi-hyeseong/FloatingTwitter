@@ -7,8 +7,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * PreferenceDataStore로 구현한 스토리지.
@@ -22,6 +27,15 @@ class PreferenceDataStore(private val context : Context) : LocalDataStorage {
     //global key map
     private val globalKeyMap : MutableMap<Any, Preferences.Key<*>> = mutableMapOf()
 
+    init {
+        // 20:54 - globalKeyMap은 메모리상에 존재하므로 앱 종료후 다시 시작되면 초기화됨..
+        // class init시 파일에 저장된 키값을 메모리에 로드하기
+        runBlocking {
+            val keySet = context.dataStore.data.map { it.asMap().keys }.firstOrNull() ?: return@runBlocking //키 - 값 리스트 불러오기. 없을경우 return
+            val keyPairMap = keySet.map { it.name to it } //name - key 매핑
+            globalKeyMap.putAll(keyPairMap) //맵에 집어넣기
+        }
+    }
     override suspend fun delete(key: String) {
         val preferenceKey = globalKeyMap[key] ?: return
         context.dataStore.edit { preference -> preference.remove(preferenceKey) }

@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.os.Binder
 import android.os.Build
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.view.Gravity
 import android.widget.ImageView
@@ -43,6 +45,8 @@ class FloatingService : FloatingBubbleService(), Runnable {
     private var lastMentionId: String = String()
     private var lastDmId: String = String()
     private var counter: Int = 0
+    private val binder : IBinder = FloatingServiceBinder()
+
 
     override fun onCreate() {
         super.onCreate()
@@ -224,6 +228,17 @@ class FloatingService : FloatingBubbleService(), Runnable {
             }
         }
 
+    }
+
+    override fun onBind(intent: Intent?): IBinder {
+        return binder
+    }
+
+    // for service bind
+    inner class FloatingServiceBinder : Binder() {
+        fun getService() : FloatingService {
+            return this@FloatingService
+        }
     }
 
 
