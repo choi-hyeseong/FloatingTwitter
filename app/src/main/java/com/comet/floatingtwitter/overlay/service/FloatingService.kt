@@ -1,4 +1,4 @@
-package com.comet.floatingtwitter.service
+package com.comet.floatingtwitter.overlay.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,12 +16,11 @@ import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
-import com.comet.floatingtwitter.BuildConfig
 import com.comet.floatingtwitter.R
 import com.comet.floatingtwitter.model.Settings
-import com.siddharthks.bubbles.DefaultFloatingBubbleTouchListener
 import com.siddharthks.bubbles.FloatingBubbleConfig
 import com.siddharthks.bubbles.FloatingBubbleService
+import com.siddharthks.bubbles.FloatingBubbleTouchListener
 import com.twitter.clientlib.ApiException
 import com.twitter.clientlib.TwitterCredentialsOAuth2
 import com.twitter.clientlib.api.TwitterApi
@@ -34,6 +33,7 @@ import java.net.URL
 
 const val CHANNEL_ID: String = "NOTIFICATION_FLOATING"
 const val DM_URL: String = "https://api.twitter.com/2/dm_events?dm_event.fields=id,text,event_type,dm_conversation_id,created_at,sender_id,attachments,participant_ids,referenced_tweets&event_types=MessageCreate&user.fields=created_at,description,id,location,name,pinned_tweet_id,public_metrics,url,username&expansions=sender_id,referenced_tweets.id,attachments.media_keys,participant_ids"
+
 class FloatingService : FloatingBubbleService(), Runnable {
 
     private lateinit var thread: Thread
@@ -51,8 +51,7 @@ class FloatingService : FloatingBubbleService(), Runnable {
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             var channel = manager.getNotificationChannel(CHANNEL_ID)
             if (channel == null) {
-                channel =
-                    NotificationChannel(CHANNEL_ID, title, NotificationManager.IMPORTANCE_HIGH)
+                channel = NotificationChannel(CHANNEL_ID, title, NotificationManager.IMPORTANCE_HIGH)
                 manager.createNotificationChannel(channel)
             }
             val notification = NotificationCompat.Builder(this, CHANNEL_ID).build()
@@ -62,17 +61,7 @@ class FloatingService : FloatingBubbleService(), Runnable {
     }
 
     override fun getConfig(): FloatingBubbleConfig {
-        return FloatingBubbleConfig.Builder()
-            .bubbleIcon(AppCompatResources.getDrawable(this, R.drawable.ic_launcher))
-            .removeBubbleIcon(AppCompatResources.getDrawable(this, R.drawable.trashcan))
-            .bubbleIconDp(setting.size)
-            .paddingDp(4)
-            .borderRadiusDp(4)
-            .moveBubbleOnTouch(false)
-            .physicsEnabled(false)
-            .expandableColor(Color.WHITE).triangleColor(Color.WHITE).gravity(Gravity.END)
-            .touchClickTime(250)
-            .notificationBackgroundColor(Color.WHITE).build()
+        return FloatingBubbleConfig.Builder().bubbleIcon(AppCompatResources.getDrawable(this, R.drawable.ic_launcher)).removeBubbleIcon(AppCompatResources.getDrawable(this, R.drawable.trashcan)).bubbleIconDp(setting.size).paddingDp(4).borderRadiusDp(4).moveBubbleOnTouch(false).physicsEnabled(false).bubbleTouchListener(getTouchListener()).expandableColor(Color.WHITE).triangleColor(Color.WHITE).gravity(Gravity.END).touchClickTime(250).notificationBackgroundColor(Color.WHITE).build()
     }
 
     override fun onGetIntent(intent: Intent): Boolean {
@@ -83,7 +72,6 @@ class FloatingService : FloatingBubbleService(), Runnable {
         setting = intent?.getSerializableExtra("setting") as Settings
         val id = super.onStartCommand(intent, flags, startId)
         //실질적 시작 로직
-        executeReflection()
         runBlocking { loadData() }
         thread = Thread(this).apply { start() }
         return id
@@ -92,14 +80,8 @@ class FloatingService : FloatingBubbleService(), Runnable {
     private fun loadData() {
         Thread {
             try {
-                tweet = TwitterApi(
-                    TwitterCredentialsOAuth2(
-                        BuildConfig.CLIENT_ID,
-                        BuildConfig.CLIENT_SECRET,
-                        setting.token,
-                        setting.refresh
-                    ).apply { isOAUth2AutoRefreshToken = true }
-                )
+                tweet = TwitterApi(TwitterCredentialsOAuth2(
+                    "BuildConfig.CLIENT_ID", "BuildConfig.CLIENT_SECRET", setting.token, setting.refresh).apply { isOAUth2AutoRefreshToken = true })
                 try {
                     val set = HashSet<String>()
                     set.add("profile_image_url")
@@ -113,56 +95,25 @@ class FloatingService : FloatingBubbleService(), Runnable {
                             val input = connection.inputStream
                             val decode = BitmapFactory.decodeStream(input)
                             handleUI {
-                                updateBubbleIcon(
-                                    RoundedBitmapDrawableFactory.create(
-                                        Resources.getSystem(),
-                                        decode
-                                    ).apply { cornerRadius = 360f })
+                                updateBubbleIcon(RoundedBitmapDrawableFactory.create(
+                                    Resources.getSystem(), decode).apply { cornerRadius = 360f })
                             }
                         }
                     }
-                } catch (e: ApiException) {
+                }
+                catch (e: ApiException) {
                     handleUI {
                         Toast.makeText(
-                            context,
-                            "OAuth2 토큰이 만료되었습니다. 토큰을 다시 등록해주세요.",
-                            Toast.LENGTH_LONG
-                        )
-                            .show()
+                            context, "OAuth2 토큰이 만료되었습니다. 토큰을 다시 등록해주세요.", Toast.LENGTH_LONG).show()
                         stopSelf()
                     }
                 }
-            } catch (e: InterruptedException) {
+            }
+            catch (e: InterruptedException) {
                 e.printStackTrace()
             }
         }.start()
 
-    }
-
-    private fun executeReflection() {
-        val field = Class.forName("com.siddharthks.bubbles.FloatingBubbleService")
-            .getDeclaredField("touch")
-        field.isAccessible = true
-        val obj = field.get(this)
-        val listener = Class.forName("com.siddharthks.bubbles.FloatingBubbleTouch")
-            .getDeclaredField("listener")
-        val defaultListener = object : DefaultFloatingBubbleTouchListener() {
-            override fun onTap(expanded: Boolean) {
-                decreaseNotificationCounterBy(counter)
-                val twit =
-                    context.packageManager.getLaunchIntentForPackage("com.twitter.android")
-                startActivity(twit)
-
-                counter = 0
-                setState(false)
-            }
-
-            override fun onRemove() {
-                stopSelf()
-            }
-        }
-        listener.isAccessible = true
-        listener.set(obj, defaultListener)
     }
 
     override fun onDestroy() {
@@ -182,7 +133,8 @@ class FloatingService : FloatingBubbleService(), Runnable {
                     result?.get(0).apply {
                         lastMentionId = this?.id!!
                     }
-                } else {
+                }
+                else {
                     //let 쓰면 객체 자체가 바뀜
                     result?.apply {
                         if (get(0).id != lastMentionId) {
@@ -197,14 +149,11 @@ class FloatingService : FloatingBubbleService(), Runnable {
                             }
                             mention = true
                             lastMentionId = get(0).id
-                            if (!updates)
-                                increaseNotificationCounterBy(1)
+                            if (!updates) increaseNotificationCounterBy(1)
                         }
                     }
                 }
-                val request = Request.Builder().url(URL(DM_URL))
-                    .header("Authorization", "Bearer ${setting.token}").header("Accept", "/*/")
-                    .header("Connection", "keep-alive").build()
+                val request = Request.Builder().url(URL(DM_URL)).header("Authorization", "Bearer ${setting.token}").header("Accept", "/*/").header("Connection", "keep-alive").build()
                 val response = OkHttpClient().newCall(request).execute()
                 response.body?.apply {
                     val jObj = JSONObject(response.body!!.string())
@@ -225,8 +174,7 @@ class FloatingService : FloatingBubbleService(), Runnable {
                             }
                             dm = true
                             lastDmId = array.getJSONObject(0).getString("id")
-                            if (!updates)
-                                increaseNotificationCounterBy(1)
+                            if (!updates) increaseNotificationCounterBy(1)
                             //나 뭐해...
                         }
                     }
@@ -238,21 +186,44 @@ class FloatingService : FloatingBubbleService(), Runnable {
                         dm -> color = setting.dm
                         mention -> setting.mention
                     }
-                    bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background)
-                        .setColorFilter(color!!)
+                    bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background).setColorFilter(color!!)
                 }
                 Thread.sleep(53000)
-            } catch (e: Exception) {
-                if (e is InterruptedException)
-                    break
-                else
-                    e.printStackTrace()
+            }
+            catch (e: Exception) {
+                if (e is InterruptedException) break
+                else e.printStackTrace()
             }
         }
     }
 
     private fun handleUI(run: Runnable) {
         Handler(Looper.getMainLooper()).post(run)
+    }
+
+    private fun getTouchListener(): FloatingBubbleTouchListener {
+        return object : FloatingBubbleTouchListener {
+            override fun onDown(x: Float, y: Float) {
+            }
+            override fun onTap(expanded: Boolean) {
+                decreaseNotificationCounterBy(counter)
+                val twit = context.packageManager.getLaunchIntentForPackage("com.twitter.android")
+                startActivity(twit)
+
+                counter = 0
+                setState(false)
+            }
+            override fun onRemove() {
+                stopSelf()
+            }
+
+            override fun onMove(x: Float, y: Float) {
+            }
+
+            override fun onUp(x: Float, y: Float) {
+            }
+        }
+
     }
 
 

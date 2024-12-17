@@ -1,0 +1,22 @@
+package com.comet.floatingtwitter.common.storage
+
+import androidx.datastore.preferences.core.Preferences
+
+/**
+ * 로컬에 저장되는 데이터를 갖고 있는 스토리지
+ */
+interface LocalDataStorage  {
+
+    suspend fun delete(key: String)
+
+    suspend fun putInt(key: String, value: Int)
+
+    suspend fun getInt(key: String, defaultValue: Int): Int
+
+    suspend fun putString(key: String, value: String)
+
+    suspend fun getString(key: String, defaultValue: String): String
+
+    suspend fun hasKey(key : String) : Boolean
+
+}

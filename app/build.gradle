@@ -22,10 +22,7 @@ android {
         targetSdk 32
         versionCode 1
         versionName "1.0"
-        buildConfigField "String", "API_KEY", "a"
-        buildConfigField "String", "CLIENT_ID", "a"
-        buildConfigField "String", "CLIENT_SECRET", "a"
-        buildConfigField "String", "ACCESS_TOKEN", "a"
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -45,7 +42,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'
@@ -55,7 +52,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
-    implementation 'com.github.choi-hyeseong:Bubbles:main'
+    implementation "com.github.choi-hyeseong:Bubbles:d2c4c10554"
     implementation 'androidx.preference:preference:1.2.0'
     implementation ("com.twitter:twitter-api-java-sdk:2.0.2") {
         exclude group:'org.apache.oltu.oauth2' , module: 'org.apache.oltu.oauth2.common'

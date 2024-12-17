@@ -68,10 +68,10 @@ class OAuthViewFragment : Fragment() {
 
     private fun executeOAuth(webView: WebView) {
         val credentials = TwitterCredentialsOAuth2(
-            BuildConfig.CLIENT_ID,
-            BuildConfig.CLIENT_SECRET,
-            BuildConfig.ACCESS_TOKEN,
-            BuildConfig.API_KEY
+           " BuildConfig.CLIENT_ID",
+            "BuildConfig.CLIENT_SECRET",
+            "BuildConfig.ACCESS_TOKEN",
+            "BuildConfig.API_KEY"
         )
         service = TwitterOAuth20Service(
             credentials.twitterOauth2ClientId,

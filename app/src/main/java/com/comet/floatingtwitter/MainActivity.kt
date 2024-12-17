@@ -7,17 +7,37 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import com.comet.floatingtwitter.callback.ActivityCallback
-import com.comet.floatingtwitter.service.FloatingService
-import com.comet.floatingtwitter.util.PreferenceUtil
+import com.comet.floatingtwitter.common.storage.PreferenceDataStore
+import com.comet.floatingtwitter.overlay.service.FloatingService
+import com.comet.floatingtwitter.twitter.setting.model.SettingData
+import com.comet.floatingtwitter.twitter.setting.repository.PreferenceSettingRepository
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : AppCompatActivity(), ActivityCallback{
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        val store = PreferenceDataStore(applicationContext)
+        val repo = PreferenceSettingRepository(store)
+        runBlocking {
+           Log.w("ASDF", "${repo.loadSetting()}")
+
+            repo.saveSetting(SettingData(10,5,5,5))
+
+            Log.w("ASDF", "${repo.loadSetting()}")
+
+        }
+        /**
         PreferenceUtil.init(getSharedPreferences("Floating", MODE_PRIVATE))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         checkPermission()
+    */
     }
 
     private fun checkPermission() {
