@@ -52,7 +52,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
     implementation 'androidx.fragment:fragment-ktx:1.5.5'
-    implementation "com.github.choi-hyeseong:Bubbles:d2c4c10554"
+    implementation 'com.github.choi-hyeseong:Bubbles:1.0'
     implementation 'androidx.preference:preference:1.2.0'
     implementation ("com.twitter:twitter-api-java-sdk:2.0.2") {
         exclude group:'org.apache.oltu.oauth2' , module: 'org.apache.oltu.oauth2.common'

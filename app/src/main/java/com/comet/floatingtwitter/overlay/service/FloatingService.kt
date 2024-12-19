@@ -21,6 +21,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import com.comet.floatingtwitter.R
 import com.comet.floatingtwitter.model.Settings
+import com.comet.floatingtwitter.twitter.oauth.usecase.LoadTokenUseCase
+import com.comet.floatingtwitter.twitter.setting.usecase.LoadSettingUseCase
 import com.siddharthks.bubbles.FloatingBubbleConfig
 import com.siddharthks.bubbles.FloatingBubbleService
 import com.siddharthks.bubbles.FloatingBubbleTouchListener
@@ -41,8 +43,9 @@ const val DM_URL: String = "https://api.twitter.com/2/dm_events?dm_event.fields=
 
 class FloatingService : FloatingBubbleService(), Runnable {
 
-    var isRunning : Boolean = false
-    var onSelfStopCallback : (() -> Unit)? = null
+    // hilt inject
+    lateinit var loadTokenUseCase: LoadTokenUseCase // authorization token load
+    lateinit var loadSettingUseCase: LoadSettingUseCase // setting load
 
     private lateinit var thread: Thread
     private lateinit var setting: Settings
@@ -51,11 +54,36 @@ class FloatingService : FloatingBubbleService(), Runnable {
     private var lastMentionId: String = String()
     private var lastDmId: String = String()
     private var counter: Int = 0
-    private val binder : IBinder = FloatingServiceBinder()
 
+    override fun getConfig(): FloatingBubbleConfig {
+        return FloatingBubbleConfig.Builder()
+            .bubbleIcon(AppCompatResources.getDrawable(this, R.drawable.ic_launcher))
+            .removeBubbleIcon(AppCompatResources.getDrawable(this, R.drawable.trashcan))
+            .bubbleIconDp(setting.size)
+            .paddingDp(4)
+            .borderRadiusDp(4)
+            .moveBubbleOnTouch(false)
+            .physicsEnabled(false)
+            .bubbleTouchListener(getTouchListener())
+            .expandableColor(Color.WHITE)
+            .triangleColor(Color.WHITE)
+            .gravity(Gravity.END)
+            .touchClickTime(250)
+            .notificationBackgroundColor(Color.WHITE)
+            .build()
+    }
+
+    override fun onGetIntent(intent: Intent): Boolean {
+        return true
+    }
 
     override fun onCreate() {
         super.onCreate()
+        // 최초로 class init시. service 시작시 onStartCommand 호출
+    }
+
+    // OREO 이상 notification 수행
+    private fun startNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val title = getString(R.string.app_name)
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -66,54 +94,48 @@ class FloatingService : FloatingBubbleService(), Runnable {
             }
             val notification = NotificationCompat.Builder(this, CHANNEL_ID).build()
             startForeground(1, notification)
-
         }
     }
 
-    override fun getConfig(): FloatingBubbleConfig {
-        return FloatingBubbleConfig.Builder().bubbleIcon(AppCompatResources.getDrawable(this, R.drawable.ic_launcher)).removeBubbleIcon(AppCompatResources.getDrawable(this, R.drawable.trashcan)).bubbleIconDp(setting.size).paddingDp(4).borderRadiusDp(4).moveBubbleOnTouch(false).physicsEnabled(false).bubbleTouchListener(getTouchListener()).expandableColor(Color.WHITE).triangleColor(Color.WHITE).gravity(Gravity.END).touchClickTime(250).notificationBackgroundColor(Color.WHITE).build()
+    fun increaseCounter(count: Int) {
+        increaseNotificationCounterBy(count)
     }
 
-    suspend fun increaseCounter(count : Int) {
-        withContext(Dispatchers.Main) {
-            increaseNotificationCounterBy(count)
-        }
+    fun resetCounter() {
+        resetNotificationCounter()
     }
 
-    suspend fun changeIcon(drawable : Drawable) {
-        withContext(Dispatchers.Main) {
-            updateBubbleIcon(drawable)
-        }
+    fun changeIcon(drawable: Drawable) {
+        updateBubbleIcon(drawable)
     }
 
-    suspend fun changeBackgroundColor(color : Int) {
-        withContext(Dispatchers.Main) {
-            bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background).setColorFilter(color)
-        }
-    }
-
-    suspend fun startService() {
+    fun changeBackgroundColor(color: Int) {
+        bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background)
+                .setColorFilter(color)
 
     }
 
-    suspend fun stopService() {
-
+    private fun startService() {
+        startNotification()
     }
 
-
-
-    override fun onGetIntent(intent: Intent): Boolean {
-        return true
+    private fun stopService() {
+        // 바인딩 할지말지 고민해보기 - 액티비티에서 끄는 버튼도 있음.
+        // onDestory랑 stopSelf 호출될때 넣을까 생각도 해봄. 어처피 서비스 종료되면 리스닝도 끝나야 하므로.
     }
+
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        setting = intent?.getSerializableExtra("setting") as Settings
         val id = super.onStartCommand(intent, flags, startId)
-        //실질적 시작 로직
-        runBlocking { loadData() }
-        thread = Thread(this).apply { start() }
+        startService() //서비스 시작
         return id
     }
+
+    override fun onDestroy() {
+        thread.interrupt()
+        super.onDestroy()
+    }
+
 
     private fun loadData() {
         Thread {
@@ -134,7 +156,8 @@ class FloatingService : FloatingBubbleService(), Runnable {
                             val decode = BitmapFactory.decodeStream(input)
                             handleUI {
                                 updateBubbleIcon(RoundedBitmapDrawableFactory.create(
-                                    Resources.getSystem(), decode).apply { cornerRadius = 360f })
+                                    Resources.getSystem(), decode)
+                                    .apply { cornerRadius = 360f })
                             }
                         }
                     }
@@ -154,10 +177,6 @@ class FloatingService : FloatingBubbleService(), Runnable {
 
     }
 
-    override fun onDestroy() {
-        thread.interrupt()
-        super.onDestroy()
-    }
 
     override fun run() {
         while (!Thread.interrupted()) {
@@ -179,7 +198,7 @@ class FloatingService : FloatingBubbleService(), Runnable {
                             var updates = false
                             for (i in 0 until size) {
                                 if (get(i).id == lastMentionId) {
-                                    handleUI { increaseNotificationCounterBy(i) } //작동안될리는 없긴한데.. 음.. 멘션 많이오면 안될수도..?
+                                    handleUI { increaseNotificationCounterBy(i) } //작동안될리는 없긴한데.. 음.. 멘션 많이오면 안될수도..? <- 2년전에 나 뭐함?. 한번에 업데이트 하라고..
                                     counter += i
                                     updates = true
                                     break
@@ -191,7 +210,9 @@ class FloatingService : FloatingBubbleService(), Runnable {
                         }
                     }
                 }
-                val request = Request.Builder().url(URL(DM_URL)).header("Authorization", "Bearer ${setting.token}").header("Accept", "/*/").header("Connection", "keep-alive").build()
+                val request = Request.Builder().url(URL(DM_URL)).header(
+                    "Authorization", "Bearer ${setting.token}").header("Accept", "/*/").header(
+                    "Connection", "keep-alive").build()
                 val response = OkHttpClient().newCall(request).execute()
                 response.body?.apply {
                     val jObj = JSONObject(response.body!!.string())
@@ -224,7 +245,9 @@ class FloatingService : FloatingBubbleService(), Runnable {
                         dm -> color = setting.dm
                         mention -> setting.mention
                     }
-                    bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background).setColorFilter(color!!)
+                    bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background)
+                        .setColorFilter(
+                            color!!)
                 }
                 Thread.sleep(53000)
             }
@@ -243,20 +266,16 @@ class FloatingService : FloatingBubbleService(), Runnable {
         return object : FloatingBubbleTouchListener {
             override fun onDown(x: Float, y: Float) {
             }
-            override fun onTap(expanded: Boolean) {
-                decreaseNotificationCounterBy(counter)
-                val twit = context.packageManager.getLaunchIntentForPackage("com.twitter.android")
-                startActivity(twit)
 
-                counter = 0
-                setState(false)
+            override fun onTap(expanded: Boolean) {
+                resetCounter() // 카운터 리셋
+                startActivity(context.packageManager.getLaunchIntentForPackage("com.twitter.android")) // 짹짹이 시작
+                setState(false) // 안펼쳐지게
             }
+
             override fun onRemove() {
-                // service Start시 서비스를 중단하는 콜백을 받을지, broadcast를 해야할지 고민이 좀..
-                // 콜백을 받자니 startService(null) 이것도 좀 이상하고, BroadcastReceiver에서 UseCase참조 (stopService())하기도 좀 그렇고.. (사실상 뷰로 봐야함)
-                // VM 참조는 더 안되고.. 일단 콜백으로 하면 FloatingService.stopService와 콜백의 충돌 예상 (나는 콜백 등록했는데 왜 stopService할때 호출 안됨? -> 여기서만 작동함.. onRemove - 스스로 종료할때)
-                // 그래서 좀 안티패턴이긴 한데 application context에 등록된 broadcast Receiver에서 stopService만 유스케이스 참조하게..
-                sendBroadcast(Intent()) // TODO
+                stopService()
+
             }
 
             override fun onMove(x: Float, y: Float) {
@@ -267,17 +286,5 @@ class FloatingService : FloatingBubbleService(), Runnable {
         }
 
     }
-
-    override fun onBind(intent: Intent?): IBinder {
-        return binder
-    }
-
-    // for service bind
-    inner class FloatingServiceBinder : Binder() {
-        fun getService() : FloatingService {
-            return this@FloatingService
-        }
-    }
-
 
 }
