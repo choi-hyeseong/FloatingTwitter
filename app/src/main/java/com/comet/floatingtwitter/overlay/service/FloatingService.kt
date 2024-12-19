@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
@@ -26,7 +27,9 @@ import com.siddharthks.bubbles.FloatingBubbleTouchListener
 import com.twitter.clientlib.ApiException
 import com.twitter.clientlib.TwitterCredentialsOAuth2
 import com.twitter.clientlib.api.TwitterApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -37,6 +40,9 @@ const val CHANNEL_ID: String = "NOTIFICATION_FLOATING"
 const val DM_URL: String = "https://api.twitter.com/2/dm_events?dm_event.fields=id,text,event_type,dm_conversation_id,created_at,sender_id,attachments,participant_ids,referenced_tweets&event_types=MessageCreate&user.fields=created_at,description,id,location,name,pinned_tweet_id,public_metrics,url,username&expansions=sender_id,referenced_tweets.id,attachments.media_keys,participant_ids"
 
 class FloatingService : FloatingBubbleService(), Runnable {
+
+    var isRunning : Boolean = false
+    var onSelfStopCallback : (() -> Unit)? = null
 
     private lateinit var thread: Thread
     private lateinit var setting: Settings
@@ -67,6 +73,34 @@ class FloatingService : FloatingBubbleService(), Runnable {
     override fun getConfig(): FloatingBubbleConfig {
         return FloatingBubbleConfig.Builder().bubbleIcon(AppCompatResources.getDrawable(this, R.drawable.ic_launcher)).removeBubbleIcon(AppCompatResources.getDrawable(this, R.drawable.trashcan)).bubbleIconDp(setting.size).paddingDp(4).borderRadiusDp(4).moveBubbleOnTouch(false).physicsEnabled(false).bubbleTouchListener(getTouchListener()).expandableColor(Color.WHITE).triangleColor(Color.WHITE).gravity(Gravity.END).touchClickTime(250).notificationBackgroundColor(Color.WHITE).build()
     }
+
+    suspend fun increaseCounter(count : Int) {
+        withContext(Dispatchers.Main) {
+            increaseNotificationCounterBy(count)
+        }
+    }
+
+    suspend fun changeIcon(drawable : Drawable) {
+        withContext(Dispatchers.Main) {
+            updateBubbleIcon(drawable)
+        }
+    }
+
+    suspend fun changeBackgroundColor(color : Int) {
+        withContext(Dispatchers.Main) {
+            bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background).setColorFilter(color)
+        }
+    }
+
+    suspend fun startService() {
+
+    }
+
+    suspend fun stopService() {
+
+    }
+
+
 
     override fun onGetIntent(intent: Intent): Boolean {
         return true
@@ -218,7 +252,11 @@ class FloatingService : FloatingBubbleService(), Runnable {
                 setState(false)
             }
             override fun onRemove() {
-                stopSelf()
+                // service Start시 서비스를 중단하는 콜백을 받을지, broadcast를 해야할지 고민이 좀..
+                // 콜백을 받자니 startService(null) 이것도 좀 이상하고, BroadcastReceiver에서 UseCase참조 (stopService())하기도 좀 그렇고.. (사실상 뷰로 봐야함)
+                // VM 참조는 더 안되고.. 일단 콜백으로 하면 FloatingService.stopService와 콜백의 충돌 예상 (나는 콜백 등록했는데 왜 stopService할때 호출 안됨? -> 여기서만 작동함.. onRemove - 스스로 종료할때)
+                // 그래서 좀 안티패턴이긴 한데 application context에 등록된 broadcast Receiver에서 stopService만 유스케이스 참조하게..
+                sendBroadcast(Intent()) // TODO
             }
 
             override fun onMove(x: Float, y: Float) {

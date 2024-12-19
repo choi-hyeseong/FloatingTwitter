@@ -25,8 +25,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback{
         val store = PreferenceDataStore(applicationContext)
         val repo = PreferenceSettingRepository(store)
         runBlocking {
-           Log.w("ASDF", "${repo.loadSetting()}")
-
+            Log.w("ASDF", store.getString("YEAH", "BOY"))
 
 
         }

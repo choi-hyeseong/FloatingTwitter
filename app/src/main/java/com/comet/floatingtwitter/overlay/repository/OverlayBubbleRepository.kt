@@ -3,6 +3,7 @@ package com.comet.floatingtwitter.overlay.repository
 import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
+import android.graphics.drawable.Drawable
 import android.os.IBinder
 import com.comet.floatingtwitter.overlay.service.FloatingService
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -16,7 +17,7 @@ class OverlayBubbleRepository(private val context : Context) : BubbleRepository 
 
     override suspend fun startService() {
         // 일반 suspend - Exception으로 예외 처리가능, Cancellable - cancel 가능 (exception optional)
-        suspendCancellableCoroutine<Unit> { continuation ->
+        suspendCancellableCoroutine { continuation ->
             val callback : ServiceConnection = object : ServiceConnection {
                 override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
                     service = (p1 as FloatingService.FloatingServiceBinder).getService()
@@ -38,19 +39,30 @@ class OverlayBubbleRepository(private val context : Context) : BubbleRepository 
     }
 
     override suspend fun stopService() {
-        TODO("Not yet implemented")
+        if (!isRunning())
+            return
+        service?.stopService()
+        service = null
+    }
+
+    override suspend fun isRunning(): Boolean {
+        return service != null && service!!.isRunning
     }
 
     override suspend fun increaseCounter(amount: Int) {
-        TODO("Not yet implemented")
+        if (isRunning())
+            service?.increaseCounter(amount)
     }
 
-    override suspend fun decreaseCounter(amount: Int) {
-        TODO("Not yet implemented")
+    override suspend fun changeIcon(drawable: Drawable) {
+        if (isRunning())
+            service?.changeIcon(drawable)
     }
 
-    override suspend fun resetCounter() {
-        TODO("Not yet implemented")
+    override suspend fun changeBackgroundColor(color: Int) {
+        if (isRunning())
+            service?.changeBackgroundColor(color)
     }
+
 
 }
