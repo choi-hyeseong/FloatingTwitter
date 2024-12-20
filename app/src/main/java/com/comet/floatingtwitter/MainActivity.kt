@@ -74,5 +74,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback{
         stopService(Intent(this, FloatingService::class.java))
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(1)
     }
-
 }
+
+// logging
+fun Any.getClassName() : String = this.javaClass.simpleName
