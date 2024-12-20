@@ -12,9 +12,9 @@ interface TokenRepository {
      *
      * @return 저장되어 있지 않은경우 null
      */
-    suspend fun loadToken() : OAuthToken?
+    suspend fun loadToken(): OAuthToken?
 
 
     // 토큰 저장
-    suspend fun saveToken(token : OAuthToken)
+    suspend fun saveToken(token: OAuthToken)
 }

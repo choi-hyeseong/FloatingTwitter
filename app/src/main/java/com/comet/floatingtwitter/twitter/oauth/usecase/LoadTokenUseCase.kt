@@ -8,7 +8,7 @@ class LoadTokenUseCase(private val tokenRepository: TokenRepository) {
     /**
      * @see TokenRepository.loadToken
      */
-    suspend operator fun invoke() : OAuthToken? {
+    suspend operator fun invoke(): OAuthToken? {
         return tokenRepository.loadToken()
     }
 }

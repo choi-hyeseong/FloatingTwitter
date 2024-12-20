@@ -13,7 +13,8 @@ android {
     compileSdk 33
 
     applicationVariants.all {
-        variant -> variant.getRuntimeConfiguration().exclude group: 'com.google.code.findbugs', module: 'jsr305'
+        variant ->
+            variant.getRuntimeConfiguration().exclude group: 'com.google.code.findbugs', module: 'jsr305'
             variant.getRuntimeConfiguration().exclude group: 'com.google.code.findbugs', module: 'annotations'
     }
 
@@ -42,7 +43,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
-    
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -72,9 +73,9 @@ dependencies {
 
     implementation 'com.github.choi-hyeseong:Bubbles:new'
     implementation 'androidx.preference:preference:1.2.0'
-    implementation ("com.twitter:twitter-api-java-sdk:2.0.2") {
-        exclude group:'org.apache.oltu.oauth2' , module: 'org.apache.oltu.oauth2.common'
-        exclude group:'com.google.guava'
+    implementation("com.twitter:twitter-api-java-sdk:2.0.2") {
+        exclude group: 'org.apache.oltu.oauth2', module: 'org.apache.oltu.oauth2.common'
+        exclude group: 'com.google.guava'
     }
     kapt "com.google.dagger:hilt-compiler:2.43.2"
     kapt "com.google.dagger:dagger-android-processor:2.43.2"

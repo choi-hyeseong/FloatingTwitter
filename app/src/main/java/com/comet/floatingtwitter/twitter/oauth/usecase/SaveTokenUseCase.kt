@@ -8,7 +8,7 @@ class SaveTokenUseCase(private val tokenRepository: TokenRepository) {
     /**
      * @see TokenRepository.saveToken
      */
-    suspend operator fun invoke(token : OAuthToken) {
+    suspend operator fun invoke(token: OAuthToken) {
         tokenRepository.saveToken(token)
     }
 }

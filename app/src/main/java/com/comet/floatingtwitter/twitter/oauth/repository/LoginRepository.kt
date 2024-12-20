@@ -11,10 +11,10 @@ interface LoginRepository {
     /**
      * 로그인에 사용될 webview의 url 입니다.
      */
-    fun getLoginURL() : String
+    fun getLoginURL(): String
 
     /**
      * 리다이렉트된 code를 이용하여 액세스 토큰을 발급받습니다.
      */
-    suspend fun login(code : String) : Result<OAuth2AccessToken>
+    suspend fun login(code: String): Result<OAuth2AccessToken>
 }

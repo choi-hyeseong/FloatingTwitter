@@ -7,7 +7,7 @@ import com.comet.floatingtwitter.twitter.api.repository.TwitterRepository
  */
 class IsServiceRunningUseCase(private val twitterRepository: TwitterRepository) {
 
-    suspend operator fun invoke() : Boolean {
+    suspend operator fun invoke(): Boolean {
         return twitterRepository.isRunning()
     }
 }

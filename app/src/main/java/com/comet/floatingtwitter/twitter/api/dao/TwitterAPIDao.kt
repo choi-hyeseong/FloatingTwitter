@@ -18,24 +18,21 @@ class TwitterAPIDao(private val twitterAPI: TwitterAPI) : TwitterDao {
 
     }
 
-    override suspend fun getMentionData(id : String, token: OAuthToken): Result<List<Tweet>> {
+    override suspend fun getMentionData(id: String, token: OAuthToken): Result<List<Tweet>> {
         val tweeterAPI = TwitterApi(TwitterCredentialsOAuth2(
-            BuildConfig.CLIENT_KEY,
-            BuildConfig.CLIENT_SECRET,
-            token.accessToken,
-            token.refreshToken
-        ).apply { isOAUth2AutoRefreshToken = true })
+            BuildConfig.CLIENT_KEY, BuildConfig.CLIENT_SECRET, token.accessToken, token.refreshToken).apply { isOAUth2AutoRefreshToken = true })
         return kotlin.runCatching { tweeterAPI.tweets().usersIdMentions(id).execute().data!! }
     }
 
-    override suspend fun getUserInfo(token: OAuthToken) : Result<User> {
+    override suspend fun getUserInfo(token: OAuthToken): Result<User> {
         val tweeterAPI = TwitterApi(TwitterCredentialsOAuth2(
-            BuildConfig.CLIENT_KEY,
-            BuildConfig.CLIENT_SECRET,
-            token.accessToken,
-            token.refreshToken
-        ).apply { isOAUth2AutoRefreshToken = true })
-        return kotlin.runCatching { tweeterAPI.users().findMyUser().userFields(setOf("profile_image_url")).execute().data!! }
+            BuildConfig.CLIENT_KEY, BuildConfig.CLIENT_SECRET, token.accessToken, token.refreshToken).apply { isOAUth2AutoRefreshToken = true })
+        return kotlin.runCatching {
+            tweeterAPI.users()
+                .findMyUser()
+                .userFields(setOf("profile_image_url"))
+                .execute().data!!
+        }
 
 
     }

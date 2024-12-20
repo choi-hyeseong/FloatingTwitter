@@ -2,14 +2,11 @@ package com.comet.floatingtwitter.twitter.oauth.view
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.comet.floatingtwitter.MainActivity
 import com.comet.floatingtwitter.R
-import com.comet.floatingtwitter.getClassName
 import com.comet.floatingtwitter.startActivityWithBackstackClear
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -31,10 +28,8 @@ class OAuthActivity : AppCompatActivity() {
     private fun initObserver() {
         oAuthViewModel.responseLiveData.observe(this) {
             it.getContent()?.let { isSuccess ->
-                if (isSuccess)
-                    Toast.makeText(this, R.string.oauth_set, Toast.LENGTH_LONG).show()
-                else
-                    Toast.makeText(this, R.string.oauth_error, Toast.LENGTH_LONG).show()
+                if (isSuccess) Toast.makeText(this, R.string.oauth_set, Toast.LENGTH_LONG).show()
+                else Toast.makeText(this, R.string.oauth_error, Toast.LENGTH_LONG).show()
                 startActivityWithBackstackClear(MainActivity::class.java)
             }
         }

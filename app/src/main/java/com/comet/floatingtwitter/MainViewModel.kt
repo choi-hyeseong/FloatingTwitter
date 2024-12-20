@@ -19,7 +19,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(private val loadSettingUseCase: LoadSettingUseCase, private val loadTokenUseCase: LoadTokenUseCase) : ViewModel() {
 
     // 서비스 시작요청시 요구사항 확인
-    val serviceRequirementLiveData : MutableLiveData<Event<ServiceRequirement>> = MutableLiveData()
+    val serviceRequirementLiveData: MutableLiveData<Event<ServiceRequirement>> = MutableLiveData()
 
     fun requestStartService() {
         CoroutineScope(Dispatchers.IO).launch {

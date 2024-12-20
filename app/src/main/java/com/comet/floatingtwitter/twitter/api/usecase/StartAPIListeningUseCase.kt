@@ -10,7 +10,7 @@ import com.twitter.clientlib.model.User
  */
 class StartAPIListeningUseCase(private val twitterRepository: TwitterRepository) {
 
-    suspend operator fun invoke(user : User, token : OAuthToken, callback : (List<EventData>) -> Unit) {
+    suspend operator fun invoke(user: User, token: OAuthToken, callback: (List<EventData>) -> Unit) {
         twitterRepository.startAPIListening(user, token, callback)
     }
 }

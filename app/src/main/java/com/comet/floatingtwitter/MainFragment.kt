@@ -1,12 +1,10 @@
 package com.comet.floatingtwitter
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -32,11 +30,20 @@ class MainFragment : Fragment() {
         mainViewModel.serviceRequirementLiveData.observe(viewLifecycleOwner) {
             it.getContent()?.let { requirement ->
                 when (requirement) {
-                    ServiceRequirement.TOKEN -> Toast.makeText(requireContext(), R.string.oauth_not_set, Toast.LENGTH_LONG).show()
-                    ServiceRequirement.SETTING -> Toast.makeText(requireContext(), R.string.setting_invalid, Toast.LENGTH_LONG).show()
-                    ServiceRequirement.BOTH -> Toast.makeText(requireContext(), R.string.invalid_both, Toast.LENGTH_LONG).show()
+                    ServiceRequirement.TOKEN -> Toast.makeText(requireContext(), R.string.oauth_not_set, Toast.LENGTH_LONG)
+                        .show()
+
+                    ServiceRequirement.SETTING -> Toast.makeText(requireContext(), R.string.setting_invalid, Toast.LENGTH_LONG)
+                        .show()
+
+                    ServiceRequirement.BOTH -> Toast.makeText(requireContext(), R.string.invalid_both, Toast.LENGTH_LONG)
+                        .show()
                     //이미 실행중인경우 안전하게 메시지 전달
-                    else -> kotlin.runCatching {  callback?.startService() }.onFailure { failure -> Toast.makeText(requireContext(), failure.message, Toast.LENGTH_LONG).show() }
+                    else -> kotlin.runCatching { callback?.startService() }
+                        .onFailure { failure ->
+                            Toast.makeText(requireContext(), failure.message, Toast.LENGTH_LONG)
+                                .show()
+                        }
                 }
             }
         }

@@ -10,7 +10,7 @@ import com.twitter.clientlib.model.User
  */
 class GetAvatarResourceUseCase(private val twitterRepository: TwitterRepository) {
 
-    suspend operator fun invoke(user : User, token : OAuthToken) : Result<Drawable> {
+    suspend operator fun invoke(user: User, token: OAuthToken): Result<Drawable> {
         return twitterRepository.getAvatarResource(user, token)
     }
 }

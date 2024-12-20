@@ -20,7 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), ActivityCallback {
 
-    private val activityManager : ActivityManager by lazy { getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager }
+    private val activityManager: ActivityManager by lazy { getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager }
 
     private val activityResultLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (Settings.canDrawOverlays(this)) {
@@ -81,8 +81,7 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
     }
 
     override fun startService() {
-        if (isServiceRunning(FloatingService::class.java))
-            throw IllegalStateException("이미 실행중인 서비스입니다.")
+        if (isServiceRunning(FloatingService::class.java)) throw IllegalStateException("이미 실행중인 서비스입니다.")
         startService(Intent(this, FloatingService::class.java))
     }
 
@@ -93,7 +92,8 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
     // 서비스 동작 확인
     // deprecated이긴 하지만 일단 사용하고 가능하면 isRunning 쓰라고는 하는데 음...
     private fun isServiceRunning(serviceClass: Class<*>): Boolean {
-        return activityManager.getRunningServices(Int.MAX_VALUE).find { it.service.className == serviceClass.name } != null
+        return activityManager.getRunningServices(Int.MAX_VALUE)
+            .find { it.service.className == serviceClass.name } != null
 
     }
 }
@@ -102,6 +102,6 @@ class MainActivity : AppCompatActivity(), ActivityCallback {
 fun Any.getClassName(): String = this.javaClass.simpleName
 
 //뒤로가기 금지하고 액티비티 시작하는 확장함수
-fun Activity.startActivityWithBackstackClear(targetClass : Class<*>) {
+fun Activity.startActivityWithBackstackClear(targetClass: Class<*>) {
     startActivity(Intent(this, targetClass).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK.or(Intent.FLAG_ACTIVITY_CLEAR_TASK)))
 }

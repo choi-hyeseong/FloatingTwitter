@@ -12,22 +12,17 @@ import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.preference.EditTextPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SeekBarPreference
 import com.comet.floatingtwitter.R
 import com.comet.floatingtwitter.callback.ActivityCallback
 import com.comet.floatingtwitter.databinding.SettingLayoutBinding
 import com.comet.floatingtwitter.twitter.setting.view.validator.ValidateResult
 import dagger.hilt.android.AndroidEntryPoint
-import okhttp3.internal.format
 
 @AndroidEntryPoint
 class SettingFragment : Fragment() {
 
     private val viewModel: SettingViewModel by viewModels()
-    private var callback : ActivityCallback? = null
+    private var callback: ActivityCallback? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)

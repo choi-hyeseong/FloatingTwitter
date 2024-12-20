@@ -27,25 +27,25 @@ class RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideTwitterAPIRepository(twitterDao: TwitterDao) : TwitterRepository {
+    fun provideTwitterAPIRepository(twitterDao: TwitterDao): TwitterRepository {
         return TwitterAPIRepository(twitterDao, INTERVAL)
     }
 
     @Provides
     @Singleton
-    fun provideLoginRepository(oAuth20Service: TwitterOAuth20Service) : LoginRepository {
+    fun provideLoginRepository(oAuth20Service: TwitterOAuth20Service): LoginRepository {
         return OAuthLoginRepository(oAuth20Service)
     }
 
     @Provides
     @Singleton
-    fun provideTokenRepository(localDataStorage: LocalDataStorage) : TokenRepository {
+    fun provideTokenRepository(localDataStorage: LocalDataStorage): TokenRepository {
         return PreferenceTokenRepository(localDataStorage)
     }
 
     @Provides
     @Singleton
-    fun provideSettingRepository(localDataStorage: LocalDataStorage) : SettingRepository {
+    fun provideSettingRepository(localDataStorage: LocalDataStorage): SettingRepository {
         return PreferenceSettingRepository(localDataStorage)
     }
 

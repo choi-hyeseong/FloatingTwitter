@@ -18,13 +18,13 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun providePreferenceDataStore(@ApplicationContext context : Context) : LocalDataStorage {
+    fun providePreferenceDataStore(@ApplicationContext context: Context): LocalDataStorage {
         return PreferenceDataStore(context)
     }
 
     @Provides
     @Singleton
-    fun provideColorValidator() : ColorValidator {
+    fun provideColorValidator(): ColorValidator {
         return ColorValidator()
     }
 }

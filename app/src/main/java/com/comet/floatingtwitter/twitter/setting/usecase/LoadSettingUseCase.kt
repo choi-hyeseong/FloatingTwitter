@@ -8,7 +8,7 @@ class LoadSettingUseCase(private val settingRepository: SettingRepository) {
     /**
      * @see SettingRepository.loadSetting
      */
-    suspend operator fun invoke() : SettingData? {
+    suspend operator fun invoke(): SettingData? {
         return settingRepository.loadSetting()
     }
 }

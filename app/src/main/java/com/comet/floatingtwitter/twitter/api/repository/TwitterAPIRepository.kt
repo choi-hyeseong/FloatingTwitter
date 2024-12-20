@@ -13,9 +13,7 @@ import com.comet.floatingtwitter.twitter.api.model.EventData
 import com.comet.floatingtwitter.twitter.api.model.EventType
 import com.comet.floatingtwitter.twitter.oauth.model.OAuthToken
 import com.skydoves.sandwich.getOrThrow
-import com.skydoves.sandwich.isSuccess
 import com.skydoves.sandwich.message
-import com.skydoves.sandwich.messageOrNull
 import com.skydoves.sandwich.suspendOnException
 import com.skydoves.sandwich.suspendOnFailure
 import com.skydoves.sandwich.suspendOnSuccess
@@ -25,11 +23,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.time.Duration
 
 /**
  * @param interval 초단위 반복시간
@@ -40,7 +35,7 @@ class TwitterAPIRepository(private val twitterDao: TwitterDao, private val inter
     private var isRunning: Boolean = false
     private var job: Job? = null // long-running, thread 쓰는게 좀더 좋긴함
     private var lastTweetId: String = "" // lastTweetId
-    private var lastDMId : String = ""
+    private var lastDMId: String = ""
 
     override suspend fun startAPIListening(user: User, token: OAuthToken, callback: (List<EventData>) -> Unit) {
         //이미 작동중인경우 리턴
@@ -87,9 +82,9 @@ class TwitterAPIRepository(private val twitterDao: TwitterDao, private val inter
 
     // dm 데이터 처리하기
     private fun handleDm(directMessages: DirectMessageDTO): List<EventData> {
-        val result : MutableList<EventData> = mutableListOf()
+        val result: MutableList<EventData> = mutableListOf()
         val data = directMessages.data
-        val topMessage : Data = data[0]
+        val topMessage: Data = data[0]
 
         // 최초 init시
         if (lastDMId.isEmpty()) {
@@ -98,16 +93,15 @@ class TwitterAPIRepository(private val twitterDao: TwitterDao, private val inter
         }
 
         // 같은경우 리턴
-        if (topMessage.id == lastDMId)
-            return emptyList()
+        if (topMessage.id == lastDMId) return emptyList()
 
         // message index find
         val index = data.indexOfFirst { message -> message.id == lastDMId }
         if (index == -1)
-            //찾지 못한경우
+        //찾지 못한경우
             result.add(EventData(EventType.DM, data.size)) // 모든 트윗을 다 알림으로 설정
         else
-            //찾은경우 index가 밀려난만큼 멘션이 들어옴 -> 최신순 (1번째 인덱스 -> 0번째 dm이 설정됨)
+        //찾은경우 index가 밀려난만큼 멘션이 들어옴 -> 최신순 (1번째 인덱스 -> 0번째 dm이 설정됨)
             result.add(EventData(EventType.DM, index))
         lastDMId = topMessage.id // 최상단으로 설정
         return result

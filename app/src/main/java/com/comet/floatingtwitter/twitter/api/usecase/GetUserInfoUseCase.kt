@@ -9,7 +9,7 @@ import com.twitter.clientlib.model.User
  */
 class GetUserInfoUseCase(private val twitterRepository: TwitterRepository) {
 
-    suspend operator fun invoke(token: OAuthToken) : Result<User> {
+    suspend operator fun invoke(token: OAuthToken): Result<User> {
         return twitterRepository.getUserInfo(token)
     }
 }

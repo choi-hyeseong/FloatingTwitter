@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OAuthFragmentViewModel @Inject constructor(private val getLoginURLUseCase: GetLoginURLUseCase) : ViewModel() {
 
-    val urlLiveData : MutableLiveData<String> by lazy { MutableLiveData<String>().also { loadURL() } }
+    val urlLiveData: MutableLiveData<String> by lazy { MutableLiveData<String>().also { loadURL() } }
 
     private fun loadURL() {
         CoroutineScope(Dispatchers.IO).launch {

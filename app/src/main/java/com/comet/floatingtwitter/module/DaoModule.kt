@@ -22,13 +22,13 @@ class DaoModule {
 
     @Provides
     @Singleton
-    fun provideTwitterDao(twitterApi: TwitterAPI) : TwitterDao {
+    fun provideTwitterDao(twitterApi: TwitterAPI): TwitterDao {
         return TwitterAPIDao(twitterApi)
     }
 
     @Provides
     @Singleton
-    fun provideTwitterOAuthService() : TwitterOAuth20Service {
+    fun provideTwitterOAuthService(): TwitterOAuth20Service {
         // api key secret이라 해놓고 막상 보면 client key에 secret으로 해놨음
         return TwitterOAuth20Service(BuildConfig.CLIENT_KEY, BuildConfig.CLIENT_SECRET, CALLBACK_URL, DEFAULT_SCOPE)
     }

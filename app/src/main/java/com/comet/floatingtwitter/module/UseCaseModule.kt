@@ -7,7 +7,6 @@ import com.comet.floatingtwitter.twitter.api.usecase.IsServiceRunningUseCase
 import com.comet.floatingtwitter.twitter.api.usecase.StartAPIListeningUseCase
 import com.comet.floatingtwitter.twitter.api.usecase.StopAPIListeningUseCase
 import com.comet.floatingtwitter.twitter.oauth.repository.LoginRepository
-import com.comet.floatingtwitter.twitter.oauth.repository.PreferenceTokenRepository
 import com.comet.floatingtwitter.twitter.oauth.repository.TokenRepository
 import com.comet.floatingtwitter.twitter.oauth.usecase.GetLoginURLUseCase
 import com.comet.floatingtwitter.twitter.oauth.usecase.LoadTokenUseCase
@@ -28,63 +27,67 @@ class UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideGetAvatarResourceUseCase(twitterRepository: TwitterRepository) : GetAvatarResourceUseCase {
+    fun provideGetAvatarResourceUseCase(twitterRepository: TwitterRepository): GetAvatarResourceUseCase {
         return GetAvatarResourceUseCase(twitterRepository)
     }
+
     @Provides
     @Singleton
-    fun provideGetUserInfoUseCase(twitterRepository: TwitterRepository) : GetUserInfoUseCase {
+    fun provideGetUserInfoUseCase(twitterRepository: TwitterRepository): GetUserInfoUseCase {
         return GetUserInfoUseCase(twitterRepository)
     }
+
     @Provides
     @Singleton
-    fun provideIsServiceRunningUseCase(twitterRepository: TwitterRepository) : IsServiceRunningUseCase {
+    fun provideIsServiceRunningUseCase(twitterRepository: TwitterRepository): IsServiceRunningUseCase {
         return IsServiceRunningUseCase(twitterRepository)
     }
+
     @Provides
     @Singleton
-    fun provideStartAPIListeningUseCase(twitterRepository: TwitterRepository) : StartAPIListeningUseCase {
+    fun provideStartAPIListeningUseCase(twitterRepository: TwitterRepository): StartAPIListeningUseCase {
         return StartAPIListeningUseCase(twitterRepository)
     }
+
     @Provides
     @Singleton
-    fun provideStopAPIListeningUseCase(twitterRepository: TwitterRepository) : StopAPIListeningUseCase {
+    fun provideStopAPIListeningUseCase(twitterRepository: TwitterRepository): StopAPIListeningUseCase {
         return StopAPIListeningUseCase(twitterRepository)
     }
 
     @Provides
     @Singleton
-    fun provideGetLoginURLUseCase(loginRepository: LoginRepository) : GetLoginURLUseCase {
+    fun provideGetLoginURLUseCase(loginRepository: LoginRepository): GetLoginURLUseCase {
         return GetLoginURLUseCase(loginRepository)
     }
 
     @Provides
     @Singleton
-    fun provideLoadTokenUseCase(tokenRepository: TokenRepository) : LoadTokenUseCase {
+    fun provideLoadTokenUseCase(tokenRepository: TokenRepository): LoadTokenUseCase {
         return LoadTokenUseCase(tokenRepository)
     }
 
     @Provides
     @Singleton
-    fun provideSaveTokenUseCase(tokenRepository: TokenRepository) : SaveTokenUseCase {
+    fun provideSaveTokenUseCase(tokenRepository: TokenRepository): SaveTokenUseCase {
         return SaveTokenUseCase(tokenRepository)
     }
 
     @Provides
     @Singleton
-    fun provideLoginUseCase(loginRepository: LoginRepository) : LoginUseCase {
+    fun provideLoginUseCase(loginRepository: LoginRepository): LoginUseCase {
         return LoginUseCase(loginRepository)
     }
 
     @Provides
     @Singleton
-    fun provideLoadSettingUseCase(settingRepository: SettingRepository) : LoadSettingUseCase {
+    fun provideLoadSettingUseCase(settingRepository: SettingRepository): LoadSettingUseCase {
         return LoadSettingUseCase(settingRepository)
     }
 
     @Provides
     @Singleton
-    fun provideSaveSettingUseCase(settingRepository: SettingRepository) : SaveSettingUseCase {
+    fun provideSaveSettingUseCase(settingRepository: SettingRepository): SaveSettingUseCase {
         return SaveSettingUseCase(settingRepository)
     }
 }

@@ -8,7 +8,7 @@ class SaveSettingUseCase(private val settingRepository: SettingRepository) {
     /**
      * @see SettingRepository.saveSetting
      */
-    suspend operator fun invoke(setting : SettingData) {
+    suspend operator fun invoke(setting: SettingData) {
         settingRepository.saveSetting(setting)
     }
 }

@@ -4,22 +4,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import android.os.Binder
 import android.os.Build
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import com.comet.floatingtwitter.R
 import com.comet.floatingtwitter.getClassName
 import com.comet.floatingtwitter.twitter.api.model.EventType
@@ -34,20 +26,12 @@ import com.comet.floatingtwitter.twitter.setting.usecase.LoadSettingUseCase
 import com.siddharthks.bubbles.FloatingBubbleConfig
 import com.siddharthks.bubbles.FloatingBubbleService
 import com.siddharthks.bubbles.FloatingBubbleTouchListener
-import com.twitter.clientlib.ApiException
-import com.twitter.clientlib.TwitterCredentialsOAuth2
-import com.twitter.clientlib.api.TwitterApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import javax.inject.Inject
 
 const val CHANNEL_ID: String = "NOTIFICATION_FLOATING"
@@ -59,19 +43,24 @@ class FloatingService : FloatingBubbleService() {
     // hilt inject
     @Inject
     lateinit var loadTokenUseCase: LoadTokenUseCase // authorization token load
+
     @Inject
     lateinit var loadSettingUseCase: LoadSettingUseCase // setting load
+
     @Inject
     lateinit var startAPIListeningUseCase: StartAPIListeningUseCase // api listening
+
     @Inject
     lateinit var stopAPIListeningUseCase: StopAPIListeningUseCase // api stop usecase
+
     @Inject
     lateinit var getAvatarResourceUseCase: GetAvatarResourceUseCase // get avatar resource
+
     @Inject
     lateinit var getUserInfoUseCase: GetUserInfoUseCase // get user info
 
-    lateinit var settingData : SettingData // 추후 init될 설정 데이터. getConfig 보다 이전에 호출됨
-    lateinit var oAuthToken : OAuthToken // 토큰 정보
+    lateinit var settingData: SettingData // 추후 init될 설정 데이터. getConfig 보다 이전에 호출됨
+    lateinit var oAuthToken: OAuthToken // 토큰 정보
 
 
     override fun getConfig(): FloatingBubbleConfig {
@@ -130,7 +119,7 @@ class FloatingService : FloatingBubbleService() {
 
     fun changeBackgroundColor(color: Int) {
         bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background)
-                .setColorFilter(color)
+            .setColorFilter(color)
 
     }
 
@@ -163,12 +152,9 @@ class FloatingService : FloatingBubbleService() {
                 if (amount != 0) {
                     val firstEvent = event[0]
                     // color setup
-                    val color = if (event.size == 2)
-                        settingData.bothNotifyColor
-                    else if (firstEvent.type == EventType.DM)
-                        settingData.directMessageColor
-                    else
-                        settingData.mentionColor
+                    val color = if (event.size == 2) settingData.bothNotifyColor
+                    else if (firstEvent.type == EventType.DM) settingData.directMessageColor
+                    else settingData.mentionColor
 
                     // main dispatcher에서 setup
                     CoroutineScope(Dispatchers.Main).launch {

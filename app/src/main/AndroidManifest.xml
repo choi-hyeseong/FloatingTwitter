@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
+
     <application
         android:name=".FloatingTwitterApp"
         android:allowBackup="true"
@@ -17,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FloatingTwitter"
         tools:targetApi="31">
-        <service android:name=".overlay.service.FloatingService"/>
+        <service android:name=".overlay.service.FloatingService" />
 
         <activity
             android:name=".MainActivity"
@@ -33,13 +36,19 @@
                 android:value="" />
         </activity>
 
-        <activity android:name=".twitter.oauth.view.OAuthActivity" android:exported="true">
+        <activity
+            android:name=".twitter.oauth.view.OAuthActivity"
+            android:exported="true">
 
             <intent-filter android:autoVerify="true"> <!--For DeepLink-->
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="ftweet" android:host="auth" />
+
+                <data
+                    android:scheme="ftweet"
+                    android:host="auth" />
             </intent-filter>
         </activity>
     </application>

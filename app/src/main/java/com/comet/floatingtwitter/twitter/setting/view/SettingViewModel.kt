@@ -1,11 +1,8 @@
 package com.comet.floatingtwitter.twitter.setting.view
 
-import android.graphics.Color
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.comet.floatingtwitter.common.event.Event
-import com.comet.floatingtwitter.getClassName
 import com.comet.floatingtwitter.twitter.oauth.usecase.LoadTokenUseCase
 import com.comet.floatingtwitter.twitter.setting.model.SettingData
 import com.comet.floatingtwitter.twitter.setting.usecase.LoadSettingUseCase
@@ -58,7 +55,7 @@ class SettingViewModel @Inject constructor(private val loadTokenUseCase: LoadTok
 
         if (result.isEmpty()) {
             CoroutineScope(Dispatchers.IO).launch {
-                val data = SettingData(iconSize,mentionColor, dmColor,bothColor)
+                val data = SettingData(iconSize, mentionColor, dmColor, bothColor)
                 saveSettingUseCase(data)
                 responseLiveData.postValue(Event(ValidateStatus(ValidateResult.OK, result)))
             }

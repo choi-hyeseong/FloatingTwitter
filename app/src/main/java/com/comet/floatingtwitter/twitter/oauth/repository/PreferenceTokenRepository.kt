@@ -13,8 +13,7 @@ class PreferenceTokenRepository(private val localDataStorage: LocalDataStorage) 
     override suspend fun loadToken(): OAuthToken? {
         val accessToken = localDataStorage.getString(ACCESS_TOKEN, "")
         val refreshToken = localDataStorage.getString(REFRESH_TOKEN, "")
-        if (accessToken.isEmpty() || refreshToken.isEmpty())
-            return null
+        if (accessToken.isEmpty() || refreshToken.isEmpty()) return null
 
         return OAuthToken(accessToken, refreshToken)
     }

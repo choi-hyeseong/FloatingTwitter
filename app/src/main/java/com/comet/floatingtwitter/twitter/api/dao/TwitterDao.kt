@@ -17,20 +17,20 @@ interface TwitterDao {
      * @param userId 해당되는 유저의 id입니다. 내부조회가 가능하지만, 매번 api 호출을 하므로, 최초 호출전 id 캐싱이 필요합니다. (getUserInfo)
      * @return 트윗 값이 없는경우 Failure를 반환합니다.
      */
-    suspend fun getMentionData(userId : String, token : OAuthToken) : Result<List<Tweet>>
+    suspend fun getMentionData(userId: String, token: OAuthToken): Result<List<Tweet>>
 
     /**
      * DM 데이터 가져오기
      */
-    suspend fun getDMData(token: OAuthToken) : ApiResponse<DirectMessageDTO>
+    suspend fun getDMData(token: OAuthToken): ApiResponse<DirectMessageDTO>
 
     /**
      * 아바타 이미지 가져오기
      */
-    suspend fun getAvatarResource(user : User, token: OAuthToken) : ApiResponse<ResponseBody>
+    suspend fun getAvatarResource(user: User, token: OAuthToken): ApiResponse<ResponseBody>
 
     /**
      * 유저 정보 가져오기. 아바타 이미지 가져올때 사용됨
      */
-    suspend fun getUserInfo(token: OAuthToken) : Result<User>
+    suspend fun getUserInfo(token: OAuthToken): Result<User>
 }

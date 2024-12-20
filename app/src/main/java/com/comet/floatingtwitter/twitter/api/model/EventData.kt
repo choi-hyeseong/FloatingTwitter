@@ -5,4 +5,4 @@ package com.comet.floatingtwitter.twitter.api.model
  * @property type 입력된 이벤트 타입 (DM, 멘션)
  * @property amount 해당 이벤트가 몇개나 쌓였는지
  */
-data class EventData(val type : EventType, val amount : Int)
+data class EventData(val type: EventType, val amount: Int)

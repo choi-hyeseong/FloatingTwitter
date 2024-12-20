@@ -1,7 +1,6 @@
 package com.comet.floatingtwitter.twitter.setting.repository
 
 import com.comet.floatingtwitter.common.storage.LocalDataStorage
-import com.comet.floatingtwitter.common.storage.PreferenceDataStore
 import com.comet.floatingtwitter.twitter.setting.model.SettingData
 
 class PreferenceSettingRepository(private val preferenceDataStore: LocalDataStorage) : SettingRepository {
@@ -21,11 +20,10 @@ class PreferenceSettingRepository(private val preferenceDataStore: LocalDataStor
     override suspend fun loadSetting(): SettingData? {
         val size = preferenceDataStore.getInt(SIZE_KEY, -1)
         val mentionColor = preferenceDataStore.getString(MENTION_KEY, "")
-        val directMessageColor = preferenceDataStore.getString(DM_KEY,  "")
-        val bothNotifyColor = preferenceDataStore.getString(BOTH_NOTIFY_KEY,  "")
+        val directMessageColor = preferenceDataStore.getString(DM_KEY, "")
+        val bothNotifyColor = preferenceDataStore.getString(BOTH_NOTIFY_KEY, "")
 
-        if (size == -1 || mentionColor.isEmpty() || directMessageColor.isEmpty() || bothNotifyColor.isEmpty())
-            return null
+        if (size == -1 || mentionColor.isEmpty() || directMessageColor.isEmpty() || bothNotifyColor.isEmpty()) return null
 
         return SettingData(size, mentionColor, directMessageColor, bothNotifyColor)
     }

@@ -1,6 +1,5 @@
 package com.comet.floatingtwitter.module
 
-import android.util.Log
 import com.comet.floatingtwitter.twitter.api.retrofit.TwitterAPI
 import com.google.gson.GsonBuilder
 import com.skydoves.sandwich.retrofit.adapters.ApiResponseCallAdapterFactory
