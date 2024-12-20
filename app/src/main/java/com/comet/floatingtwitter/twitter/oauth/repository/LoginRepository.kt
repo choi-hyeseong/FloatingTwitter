@@ -16,5 +16,5 @@ interface LoginRepository {
     /**
      * 리다이렉트된 code를 이용하여 액세스 토큰을 발급받습니다.
      */
-    suspend fun login(code : String) : OAuth2AccessToken
+    suspend fun login(code : String) : Result<OAuth2AccessToken>
 }

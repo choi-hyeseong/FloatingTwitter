@@ -36,6 +36,7 @@ import java.time.Duration
  */
 class TwitterAPIRepository(private val twitterDao: TwitterDao, private val interval: Int) : TwitterRepository {
 
+    @Volatile // for thread sync
     private var isRunning: Boolean = false
     private var job: Job? = null // long-running, thread 쓰는게 좀더 좋긴함
     private var lastTweetId: String = "" // lastTweetId
@@ -44,37 +45,39 @@ class TwitterAPIRepository(private val twitterDao: TwitterDao, private val inter
     override suspend fun startAPIListening(user: User, token: OAuthToken, callback: (List<EventData>) -> Unit) {
         //이미 작동중인경우 리턴
         if (isRunning) return
+        isRunning = true
         // IO Dispatcher pooling
         val events: MutableList<EventData> = mutableListOf()
         job = CoroutineScope(Dispatchers.IO).launch {
-            // 동시에 async으로 호출해서 서로 유사한 시각에 api 호출하기
-            val mentionCall = async { twitterDao.getMentionData(user.id, token) }
-            val directMessageResponseCall = async { twitterDao.getDMData(token) }
+            while (isRunning) {
+                // 동시에 async으로 호출해서 서로 유사한 시각에 api 호출하기
+                val mentionCall = async { twitterDao.getMentionData(user.id, token) }
+                val directMessageResponseCall = async { twitterDao.getDMData(token) }
 
-            // 멘션 데이터
-            val mention = mentionCall.await()
-            if (mention.isSuccess)
-                events.addAll(handleMention(mention.getOrThrow())) // throw 안됨
-            else Log.w(getClassName(),
-                mention.exceptionOrNull()) // exception 알려줌
+                // 멘션 데이터
+                val mention = mentionCall.await()
+                if (mention.isSuccess) events.addAll(handleMention(mention.getOrThrow())) // throw 안됨
+                else Log.w(
+                    getClassName(), mention.exceptionOrNull()) // exception 알려줌
 
-            // dm 데이터
-            val directMessageResponse = directMessageResponseCall.await()
-            directMessageResponse.suspendOnSuccess {
-                events.addAll(handleDm(this.data)) // 추가
-            }.suspendOnFailure {
-                Log.w(getClassName(), this.message()) // 메시지 로깅
-            }.suspendOnException {
-                Log.w(getClassName(), this.throwable) // exception 핸들
+                // dm 데이터
+                val directMessageResponse = directMessageResponseCall.await()
+                directMessageResponse.suspendOnSuccess {
+                    events.addAll(handleDm(this.data)) // 추가
+                }.suspendOnFailure {
+                    Log.w(getClassName(), this.message()) // 메시지 로깅
+                }.suspendOnException {
+                    Log.w(getClassName(), this.throwable) // exception 핸들
+                }
+
+                // 이벤트가 있는경우
+                if (events.isNotEmpty()) {
+                    callback(events)
+                    events.clear()
+                }
+
+                delay(interval * 1000L)
             }
-
-            // 이벤트가 있는경우
-            if (events.isNotEmpty()) {
-                callback(events)
-                events.clear()
-            }
-
-            delay(interval * 1000L)
         }
 
 

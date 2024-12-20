@@ -26,8 +26,8 @@ class OAuthLoginRepository(private val oauthClient : TwitterOAuth20Service) : Lo
         return oauthClient.getAuthorizationUrl(PKCE, SECRET_STATE)
     }
 
-    override suspend fun login(code: String): OAuth2AccessToken {
-        return oauthClient.getAccessToken(PKCE, code)
+    override suspend fun login(code: String): Result<OAuth2AccessToken> {
+        return kotlin.runCatching { oauthClient.getAccessToken(PKCE, code) }
     }
 
 

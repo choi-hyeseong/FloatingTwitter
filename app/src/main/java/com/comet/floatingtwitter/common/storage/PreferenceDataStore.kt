@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import com.comet.floatingtwitter.getClassName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -76,7 +77,7 @@ class PreferenceDataStore(private val context : Context) : LocalDataStorage {
             // casting exception 발생한 이유. T가 Int인데 String값이 들어오면 map 함수에서도 Int로 캐스팅 시도 -> 에러.
             // 따라서 Any로 우선 받고, as?를 이용해서 안전한 캐스팅 수행
             // 17:23 - get할때 얘도 uncheckedCasting 수행함.
-            val value = preference[preferenceKey]
+            val value = preference.get(preferenceKey as Preferences.Key<Any>)
             value as? T// 캐스팅 예외 대비 as? 사용
         }.firstOrNull()
 

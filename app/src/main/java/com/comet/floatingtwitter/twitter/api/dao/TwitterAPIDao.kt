@@ -1,5 +1,6 @@
 package com.comet.floatingtwitter.twitter.api.dao
 
+import com.comet.floatingtwitter.BuildConfig
 import com.comet.floatingtwitter.twitter.api.dto.DirectMessageDTO
 import com.comet.floatingtwitter.twitter.api.retrofit.TwitterAPI
 import com.comet.floatingtwitter.twitter.oauth.model.OAuthToken
@@ -11,10 +12,16 @@ import com.twitter.clientlib.model.User
 import okhttp3.ResponseBody
 
 class TwitterAPIDao(private val twitterAPI: TwitterAPI) : TwitterDao {
+
+    companion object {
+        const val DM_URL: String = "https://api.twitter.com/2/dm_events?dm_event.fields=id,text,event_type,dm_conversation_id,created_at,sender_id,attachments,participant_ids,referenced_tweets&event_types=MessageCreate&user.fields=created_at,description,id,location,name,pinned_tweet_id,public_metrics,url,username&expansions=sender_id,referenced_tweets.id,attachments.media_keys,participant_ids/"
+
+    }
+
     override suspend fun getMentionData(id : String, token: OAuthToken): Result<List<Tweet>> {
         val tweeterAPI = TwitterApi(TwitterCredentialsOAuth2(
-            "BuildConfig.CLIENT_ID",
-            "BuildConfig.CLIENT_SECRET",
+            BuildConfig.CLIENT_KEY,
+            BuildConfig.CLIENT_SECRET,
             token.accessToken,
             token.refreshToken
         ).apply { isOAUth2AutoRefreshToken = true })
@@ -23,8 +30,8 @@ class TwitterAPIDao(private val twitterAPI: TwitterAPI) : TwitterDao {
 
     override suspend fun getUserInfo(token: OAuthToken) : Result<User> {
         val tweeterAPI = TwitterApi(TwitterCredentialsOAuth2(
-            "BuildConfig.CLIENT_ID",
-            "BuildConfig.CLIENT_SECRET",
+            BuildConfig.CLIENT_KEY,
+            BuildConfig.CLIENT_SECRET,
             token.accessToken,
             token.refreshToken
         ).apply { isOAUth2AutoRefreshToken = true })
@@ -34,7 +41,7 @@ class TwitterAPIDao(private val twitterAPI: TwitterAPI) : TwitterDao {
     }
 
     override suspend fun getDMData(token: OAuthToken): ApiResponse<DirectMessageDTO> {
-        return twitterAPI.getDMData(token.accessToken)
+        return twitterAPI.getDMData(DM_URL, "Bearer ${token.accessToken}")
     }
 
     override suspend fun getAvatarResource(user: User, token: OAuthToken): ApiResponse<ResponseBody> {

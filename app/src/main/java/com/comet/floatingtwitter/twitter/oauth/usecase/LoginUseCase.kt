@@ -8,7 +8,7 @@ class LoginUseCase(private val loginRepository: LoginRepository) {
     /**
      * @see LoginRepository.login
      */
-    suspend operator fun invoke(code : String) : OAuth2AccessToken {
+    suspend operator fun invoke(code : String) : Result<OAuth2AccessToken> {
         return loginRepository.login(code)
     }
 }

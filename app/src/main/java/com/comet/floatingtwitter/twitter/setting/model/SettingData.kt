@@ -8,4 +8,4 @@ package com.comet.floatingtwitter.twitter.setting.model
  * @property bothNotifyColor 둘다 알림 왔을때 색
  * @see Color.java
  */
-data class SettingData(val size : Int, val mentionColor : Int, val directMessageColor : Int, val bothNotifyColor : Int)
+data class SettingData(val size : Int, val mentionColor : String, val directMessageColor : String, val bothNotifyColor : String)

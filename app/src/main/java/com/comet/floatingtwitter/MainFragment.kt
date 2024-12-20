@@ -9,14 +9,51 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.comet.floatingtwitter.callback.ActivityCallback
-import com.comet.floatingtwitter.model.Settings
-import com.comet.floatingtwitter.util.PreferenceUtil
+import com.comet.floatingtwitter.databinding.MainLayoutBinding
+import com.comet.floatingtwitter.overlay.type.ServiceRequirement
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainFragment : Fragment() {
 
     private var callback: ActivityCallback? = null
-    private val preference: PreferenceUtil = PreferenceUtil.INSTANCE
+    private val mainViewModel: MainViewModel by viewModels()
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val bind = MainLayoutBinding.inflate(layoutInflater)
+        initListener(bind)
+        initObserver()
+        return bind.root
+    }
+
+    private fun initObserver() {
+        mainViewModel.serviceRequirementLiveData.observe(viewLifecycleOwner) {
+            it.getContent()?.let { requirement ->
+                when (requirement) {
+                    ServiceRequirement.TOKEN -> Toast.makeText(requireContext(), R.string.oauth_not_set, Toast.LENGTH_LONG).show()
+                    ServiceRequirement.SETTING -> Toast.makeText(requireContext(), R.string.setting_invalid, Toast.LENGTH_LONG).show()
+                    ServiceRequirement.BOTH -> Toast.makeText(requireContext(), R.string.invalid_both, Toast.LENGTH_LONG).show()
+                    //이미 실행중인경우 안전하게 메시지 전달
+                    else -> kotlin.runCatching {  callback?.startService() }.onFailure { failure -> Toast.makeText(requireContext(), failure.message, Toast.LENGTH_LONG).show() }
+                }
+            }
+        }
+    }
+
+    //setting으로 이동
+    private fun initListener(binding: MainLayoutBinding) {
+        binding.settings.setOnClickListener {
+            callback?.switchSetting()
+        }
+        binding.start.setOnClickListener {
+            mainViewModel.requestStartService() //서비스 시작은 vm으로 요청
+        }
+        binding.stop.setOnClickListener {
+            callback?.stopService()
+        }
+    }
 
     override fun onAttach(context: Context) {
         callback = context as ActivityCallback
@@ -28,46 +65,5 @@ class MainFragment : Fragment() {
         super.onDetach()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        //load data
-        val view = inflater.inflate(R.layout.main_layout, container, false)
-        val btn = view.findViewById<Button>(R.id.start)
-        val stop = view.findViewById<Button>(R.id.stop)
-        val setting = view.findViewById<Button>(R.id.settings)
-        btn.setOnClickListener { start() }
-        stop.setOnClickListener { callback?.stopService() }
-        setting.setOnClickListener { callback?.switchSetting() }
-        return view
-    }
-
-    private fun start() {
-        val token = preference.getString("token")
-        val refresh = preference.getString("refresh")
-        val size = preference.getInt("icon_size")
-        val mention = parseColor(preference.getString("mention_color"))
-        val dm = parseColor(preference.getString("dm_color"))
-        val twin = parseColor(preference.getString("twin_color"))
-        if (token.isNullOrEmpty())
-            Toast.makeText(context, "토큰이 지정되어 있지 않습니다. 설정 -> OAuth 토큰 설정하기를 진행해주세요.", Toast.LENGTH_LONG).show()
-        else if (size <= 0)
-            Toast.makeText(context, "아이콘 크기가 0이하로 지정되어 있습니다. 다시 설정해주세요.", Toast.LENGTH_LONG).show()
-        else {
-            //위에서 null check
-            val setting = Settings(token, refresh, size, mention, dm, twin)
-            callback?.startService(setting)
-        }
-    }
-
-    private fun parseColor(str: String?): Int {
-        return try {
-            Color.parseColor(str)
-        } catch (e: IllegalArgumentException) {
-            Color.WHITE
-        }
-    }
 
 }

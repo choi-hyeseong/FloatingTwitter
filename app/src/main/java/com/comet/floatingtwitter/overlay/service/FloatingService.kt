@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import android.view.Gravity
 import android.widget.ImageView
 import android.widget.Toast
@@ -20,8 +21,15 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import com.comet.floatingtwitter.R
-import com.comet.floatingtwitter.model.Settings
+import com.comet.floatingtwitter.getClassName
+import com.comet.floatingtwitter.twitter.api.model.EventType
+import com.comet.floatingtwitter.twitter.api.usecase.GetAvatarResourceUseCase
+import com.comet.floatingtwitter.twitter.api.usecase.GetUserInfoUseCase
+import com.comet.floatingtwitter.twitter.api.usecase.StartAPIListeningUseCase
+import com.comet.floatingtwitter.twitter.api.usecase.StopAPIListeningUseCase
+import com.comet.floatingtwitter.twitter.oauth.model.OAuthToken
 import com.comet.floatingtwitter.twitter.oauth.usecase.LoadTokenUseCase
+import com.comet.floatingtwitter.twitter.setting.model.SettingData
 import com.comet.floatingtwitter.twitter.setting.usecase.LoadSettingUseCase
 import com.siddharthks.bubbles.FloatingBubbleConfig
 import com.siddharthks.bubbles.FloatingBubbleService
@@ -29,7 +37,10 @@ import com.siddharthks.bubbles.FloatingBubbleTouchListener
 import com.twitter.clientlib.ApiException
 import com.twitter.clientlib.TwitterCredentialsOAuth2
 import com.twitter.clientlib.api.TwitterApi
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -37,29 +48,37 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.inject.Inject
 
 const val CHANNEL_ID: String = "NOTIFICATION_FLOATING"
 const val DM_URL: String = "https://api.twitter.com/2/dm_events?dm_event.fields=id,text,event_type,dm_conversation_id,created_at,sender_id,attachments,participant_ids,referenced_tweets&event_types=MessageCreate&user.fields=created_at,description,id,location,name,pinned_tweet_id,public_metrics,url,username&expansions=sender_id,referenced_tweets.id,attachments.media_keys,participant_ids"
 
-class FloatingService : FloatingBubbleService(), Runnable {
+@AndroidEntryPoint
+class FloatingService : FloatingBubbleService() {
 
     // hilt inject
+    @Inject
     lateinit var loadTokenUseCase: LoadTokenUseCase // authorization token load
+    @Inject
     lateinit var loadSettingUseCase: LoadSettingUseCase // setting load
+    @Inject
+    lateinit var startAPIListeningUseCase: StartAPIListeningUseCase // api listening
+    @Inject
+    lateinit var stopAPIListeningUseCase: StopAPIListeningUseCase // api stop usecase
+    @Inject
+    lateinit var getAvatarResourceUseCase: GetAvatarResourceUseCase // get avatar resource
+    @Inject
+    lateinit var getUserInfoUseCase: GetUserInfoUseCase // get user info
 
-    private lateinit var thread: Thread
-    private lateinit var setting: Settings
-    private lateinit var id: String
-    private lateinit var tweet: TwitterApi
-    private var lastMentionId: String = String()
-    private var lastDmId: String = String()
-    private var counter: Int = 0
+    lateinit var settingData : SettingData // 추후 init될 설정 데이터. getConfig 보다 이전에 호출됨
+    lateinit var oAuthToken : OAuthToken // 토큰 정보
+
 
     override fun getConfig(): FloatingBubbleConfig {
         return FloatingBubbleConfig.Builder()
             .bubbleIcon(AppCompatResources.getDrawable(this, R.drawable.ic_launcher))
             .removeBubbleIcon(AppCompatResources.getDrawable(this, R.drawable.trashcan))
-            .bubbleIconDp(setting.size)
+            .bubbleIconDp(settingData.size)
             .paddingDp(4)
             .borderRadiusDp(4)
             .moveBubbleOnTouch(false)
@@ -117,149 +136,79 @@ class FloatingService : FloatingBubbleService(), Runnable {
 
     private fun startService() {
         startNotification()
+        CoroutineScope(Dispatchers.IO).launch {
+            val userResult = getUserInfoUseCase(oAuthToken)
+            if (userResult.isFailure) { // 유저 정보를 가져오지 못한경우
+                stopService()
+                Log.w(getClassName(), "can't get user info")
+                Log.e(getClassName(), "${userResult.exceptionOrNull()}")
+                return@launch
+            }
+            val user = userResult.getOrThrow() // 위에서 체크했으므로 throw X
+
+            val avatarResult = getAvatarResourceUseCase(user, oAuthToken)
+            if (avatarResult.isFailure) {
+                stopService()
+                Log.w(getClassName(), "can't get user avatar info")
+                Log.e(getClassName(), "${userResult.exceptionOrNull()}")
+                return@launch
+            }
+            val avatar = avatarResult.getOrThrow()
+            withContext(Dispatchers.Main) {
+                changeIcon(avatar) // 버블 아이콘 업데이트
+            }
+
+            startAPIListeningUseCase(user, oAuthToken) { event ->
+                val amount = event.sumOf { it.amount } // 총 notify할 수량
+                if (amount != 0) {
+                    val firstEvent = event[0]
+                    // color setup
+                    val color = if (event.size == 2)
+                        settingData.bothNotifyColor
+                    else if (firstEvent.type == EventType.DM)
+                        settingData.directMessageColor
+                    else
+                        settingData.mentionColor
+
+                    // main dispatcher에서 setup
+                    CoroutineScope(Dispatchers.Main).launch {
+                        increaseCounter(amount)
+                        changeBackgroundColor(Color.parseColor(color))
+                    }
+                }
+            }
+        }
     }
 
     private fun stopService() {
         // 바인딩 할지말지 고민해보기 - 액티비티에서 끄는 버튼도 있음.
         // onDestory랑 stopSelf 호출될때 넣을까 생각도 해봄. 어처피 서비스 종료되면 리스닝도 끝나야 하므로.
+        stopSelf()
+        CoroutineScope(Dispatchers.IO).launch {
+            stopAPIListeningUseCase()
+        }
+    }
+
+    private fun beforeInit() {
+        // onStartCommand 호출전 init하기
+        runBlocking {
+            // assertion 넣은 이유는 서비스 시작하기전 VM에서 값이 존재하는지 체크를 진행하기 때문.
+            // assertion 안넣을거면 isSettingSaved 같은 유스케이스 만들어도 좋을듯
+            settingData = loadSettingUseCase()!!
+            oAuthToken = loadTokenUseCase()!!
+        }
     }
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        beforeInit()
         val id = super.onStartCommand(intent, flags, startId)
         startService() //서비스 시작
         return id
     }
 
     override fun onDestroy() {
-        thread.interrupt()
         super.onDestroy()
-    }
-
-
-    private fun loadData() {
-        Thread {
-            try {
-                tweet = TwitterApi(TwitterCredentialsOAuth2(
-                    "BuildConfig.CLIENT_ID", "BuildConfig.CLIENT_SECRET", setting.token, setting.refresh).apply { isOAUth2AutoRefreshToken = true })
-                try {
-                    val set = HashSet<String>()
-                    set.add("profile_image_url")
-                    val result = tweet.users().findMyUser().userFields(set).execute().data
-                    if (result != null) {
-                        id = result.id
-                        val url = result.profileImageUrl
-                        url?.apply {
-                            val bigger = URL(url.toString().split("_normal")[0] + "_400x400.jpg")
-                            val connection = bigger.openConnection() as HttpURLConnection
-                            val input = connection.inputStream
-                            val decode = BitmapFactory.decodeStream(input)
-                            handleUI {
-                                updateBubbleIcon(RoundedBitmapDrawableFactory.create(
-                                    Resources.getSystem(), decode)
-                                    .apply { cornerRadius = 360f })
-                            }
-                        }
-                    }
-                }
-                catch (e: ApiException) {
-                    handleUI {
-                        Toast.makeText(
-                            context, "OAuth2 토큰이 만료되었습니다. 토큰을 다시 등록해주세요.", Toast.LENGTH_LONG).show()
-                        stopSelf()
-                    }
-                }
-            }
-            catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-        }.start()
-
-    }
-
-
-    override fun run() {
-        while (!Thread.interrupted()) {
-            try {
-                var mention = false
-                var dm = false
-                Thread.sleep(7000)
-                val result = tweet.tweets()?.usersIdMentions(id)?.execute()?.data
-                if (lastMentionId.isEmpty()) {
-                    //서비스 처음 시작된경우
-                    result?.get(0).apply {
-                        lastMentionId = this?.id!!
-                    }
-                }
-                else {
-                    //let 쓰면 객체 자체가 바뀜
-                    result?.apply {
-                        if (get(0).id != lastMentionId) {
-                            var updates = false
-                            for (i in 0 until size) {
-                                if (get(i).id == lastMentionId) {
-                                    handleUI { increaseNotificationCounterBy(i) } //작동안될리는 없긴한데.. 음.. 멘션 많이오면 안될수도..? <- 2년전에 나 뭐함?. 한번에 업데이트 하라고..
-                                    counter += i
-                                    updates = true
-                                    break
-                                }
-                            }
-                            mention = true
-                            lastMentionId = get(0).id
-                            if (!updates) increaseNotificationCounterBy(1)
-                        }
-                    }
-                }
-                val request = Request.Builder().url(URL(DM_URL)).header(
-                    "Authorization", "Bearer ${setting.token}").header("Accept", "/*/").header(
-                    "Connection", "keep-alive").build()
-                val response = OkHttpClient().newCall(request).execute()
-                response.body?.apply {
-                    val jObj = JSONObject(response.body!!.string())
-                    val array = jObj.getJSONArray("data")
-                    if (lastDmId.isEmpty()) {
-                        lastDmId = array.getJSONObject(0).getString("id")
-                    }
-                    else {
-                        if (array.getJSONObject(0).getString("id") != lastDmId) {
-                            var updates = false
-                            for (i in 0 until array.length()) {
-                                if (array.getJSONObject(i).getString("id") == lastDmId) {
-                                    handleUI { increaseNotificationCounterBy(i) }
-                                    counter += i
-                                    updates = true
-                                    break
-                                }
-                            }
-                            dm = true
-                            lastDmId = array.getJSONObject(0).getString("id")
-                            if (!updates) increaseNotificationCounterBy(1)
-                            //나 뭐해...
-                        }
-                    }
-                }
-                if (mention || dm) {
-                    var color: Int? = Color.RED
-                    when {
-                        dm && mention -> color = setting.twin
-                        dm -> color = setting.dm
-                        mention -> setting.mention
-                    }
-                    bubbleView.findViewById<ImageView>(com.siddharthks.bubbles.R.id.notification_background)
-                        .setColorFilter(
-                            color!!)
-                }
-                Thread.sleep(53000)
-            }
-            catch (e: Exception) {
-                if (e is InterruptedException) break
-                else e.printStackTrace()
-            }
-        }
-    }
-
-    private fun handleUI(run: Runnable) {
-        Handler(Looper.getMainLooper()).post(run)
     }
 
     private fun getTouchListener(): FloatingBubbleTouchListener {

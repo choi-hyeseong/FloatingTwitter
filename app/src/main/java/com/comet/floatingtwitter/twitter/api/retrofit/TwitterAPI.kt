@@ -13,6 +13,6 @@ interface TwitterAPI {
     @GET
     suspend fun getAvatarImage(@Url imageUrl : String) : ApiResponse<ResponseBody>
 
-    @POST
-    suspend fun getDMData(@Header("authorization") authorization : String) : ApiResponse<DirectMessageDTO>
+    @GET
+    suspend fun getDMData(@Url directMessageUrl : String, @Header("authorization") authorization : String) : ApiResponse<DirectMessageDTO>
 }
