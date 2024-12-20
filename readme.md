@@ -1,4 +1,5 @@
 # FloatingTwitter
+![화면 캡처 2024-12-20 215955](https://github.com/user-attachments/assets/57927335-df7d-4c91-abbe-05631ebf145f)
 
 페이스북의 버블처럼 화면위에서 알림 띄워주는 앱
 
