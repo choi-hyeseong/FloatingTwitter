@@ -44,7 +44,7 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOpenAIService(retrofit: Retrofit): TwitterAPI {
+    fun provideTwitterAPIService(retrofit: Retrofit): TwitterAPI {
         return retrofit.create(TwitterAPI::class.java)
     }
 
