@@ -14,6 +14,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**
@@ -24,26 +26,34 @@ class SettingViewModel @Inject constructor(private val loadTokenUseCase: LoadTok
 
     // lazy로 지정되어 바로 로드가 아닌 참조시 로드
     // 토큰값이 '설정'되어 있는지만 확인하는 livedata
-    val isTokenSetLiveData: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>().also { loadTokenIsValid() } }
+    val isTokenSetLiveData: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().apply {
+            value = loadTokenIsValid()
+        }
+    }
 
     // 설정값 가져오는 livedata
-    val settingDataLiveData: MutableLiveData<SettingData> by lazy { MutableLiveData<SettingData>().also { loadSetting() } }
+    val settingDataLiveData: MutableLiveData<SettingData> by lazy {
+        MutableLiveData<SettingData>().apply {
+            val setting = loadSetting() ?: return@apply
+            value = setting
+        }
+    }
 
     // for toast - 저장 성공여부만 1회성으로 나타냄
     val responseLiveData: MutableLiveData<Event<ValidateStatus>> = MutableLiveData()
 
 
-    private fun loadTokenIsValid() {
+    private fun loadTokenIsValid(): Boolean = runBlocking {
         // 토큰 저장되었는지 확인
-        CoroutineScope(Dispatchers.IO).launch {
-            isTokenSetLiveData.postValue(loadTokenUseCase() != null)
+        withContext(Dispatchers.IO) {
+            loadTokenUseCase() != null
         }
     }
 
-    private fun loadSetting() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val setting = loadSettingUseCase()
-            if (setting != null) settingDataLiveData.postValue(setting)
+    private fun loadSetting(): SettingData? = runBlocking {
+        withContext(Dispatchers.IO) {
+            loadSettingUseCase()
         }
     }
 
